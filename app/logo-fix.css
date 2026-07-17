@@ -1,4 +1,4 @@
-/* Shorexplorations logo placement. The real asset is now available at /logo.svg, so do not replace it with text. */
+/* Shorexplorations logo placement. The real asset is available at /logo.svg. */
 .login-brand-panel::before,
 .portal-brand::before,
 footer div::before {
@@ -7,14 +7,15 @@ footer div::before {
 
 .login-brand-panel > img {
   display: block !important;
-  align-self: flex-end;
-  width: clamp(210px, 18vw, 300px);
+  position: absolute;
+  top: clamp(26px, 4vw, 48px);
+  right: clamp(28px, 5vw, 72px);
+  z-index: 3;
+  width: clamp(220px, 20vw, 330px);
   height: auto;
-  max-height: 230px;
+  max-height: 250px;
   object-fit: contain;
   object-position: center;
-  position: relative;
-  z-index: 3;
 }
 
 .portal-brand img {
@@ -39,10 +40,14 @@ footer div span {
 
 @media (max-width: 700px) {
   .login-brand-panel > img {
-    align-self: flex-end;
-    width: min(46vw, 190px);
-    max-height: 150px;
-    margin-bottom: 12px;
+    top: 18px;
+    right: 18px;
+    width: min(44vw, 178px);
+    max-height: 138px;
+  }
+
+  .login-brand-panel > div {
+    padding-top: 112px;
   }
 
   .portal-brand {
