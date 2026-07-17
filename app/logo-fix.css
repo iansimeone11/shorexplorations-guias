@@ -7,15 +7,14 @@ footer div::before {
 
 .login-brand-panel > img {
   display: block !important;
-  position: absolute;
-  top: clamp(26px, 4vw, 48px);
-  right: clamp(28px, 5vw, 72px);
-  z-index: 3;
-  width: clamp(220px, 20vw, 330px);
+  align-self: flex-start;
+  width: clamp(190px, 16vw, 260px);
   height: auto;
-  max-height: 250px;
+  max-height: 210px;
   object-fit: contain;
-  object-position: center;
+  object-position: left top;
+  position: relative;
+  z-index: 3;
 }
 
 .portal-brand img {
@@ -40,14 +39,10 @@ footer div span {
 
 @media (max-width: 700px) {
   .login-brand-panel > img {
-    top: 18px;
-    right: 18px;
-    width: min(44vw, 178px);
-    max-height: 138px;
-  }
-
-  .login-brand-panel > div {
-    padding-top: 112px;
+    align-self: flex-start;
+    width: min(50vw, 170px);
+    max-height: 132px;
+    margin-bottom: 12px;
   }
 
   .portal-brand {
