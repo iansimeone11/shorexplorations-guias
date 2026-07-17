@@ -4,6 +4,9 @@ import { FormEvent, useMemo, useState } from "react";
 
 type Tour = { code: string; title: string; duration: string; category: string; endpoint: string; summary: string; file: string };
 type Assignment = { guideFirstName: string; guideLastName: string; tour: Tour; bus: string; meetingTime: string; startTime: string; departurePoint: string; dateLabel: string; operationNote: string };
+type LoginResponse =
+  | { ok: true; guide: { firstName: string; lastName: string; staff: string; role: string; languages: string }; assignment: null | { tourCode: string; bus: string; meetingTime: string; startTime: string; departurePoint: string; dateLabel: string }; demo?: boolean }
+  | { ok: false; error: string };
 
 const pdfBase = "https://shorexplorations-guias.freedomlion.chatgpt.site/pdfs";
 const logo = "/logo.svg";
@@ -28,6 +31,16 @@ const tours: Tour[] = [
   { code: "S/C", title: "Paseo River - Boca", duration: "6:15 h", category: "Futbol", endpoint: "Abovedado", summary: "Circuito futbolero con refrigerio, museos y Caminito.", file: "Paseo River - Boca.pdf" },
 ];
 
+const unassignedTour: Tour = {
+  code: "S/A",
+  title: "Sin tour asignado todavia",
+  duration: "Pendiente",
+  category: "Operativo",
+  endpoint: "Abovedado",
+  summary: "El acceso ya fue validado. Falta cargar en la base el tour, bus, horario y punto de partida para este guia.",
+  file: "Shorexplorations - Compendio descriptivos de tours.pdf",
+};
+
 const demoAssignment: Assignment = {
   guideFirstName: "Lucia",
   guideLastName: "Demo",
@@ -48,6 +61,7 @@ export default function Home() {
   const [lastName, setLastName] = useState("");
   const [pin, setPin] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [selected, setSelected] = useState<Tour | null>(null);
@@ -60,13 +74,50 @@ export default function Home() {
     });
   }, [category, query]);
 
-  function login(event: FormEvent<HTMLFormElement>) {
+  async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lastName.trim().toLocaleLowerCase("es") === "demo" && pin === "1234") {
-      setAssignment(demoAssignment);
-      setLoginError("");
-    } else {
-      setLoginError("Apellido o clave incorrectos. En esta demo usa DEMO / 1234.");
+    setIsLoggingIn(true);
+    setLoginError("");
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lastName, pin }),
+      });
+      const data = (await response.json()) as LoginResponse;
+
+      if (!data.ok) {
+        setLoginError(data.error || "No pudimos validar el acceso.");
+        return;
+      }
+
+      if (data.demo) {
+        setAssignment(demoAssignment);
+        return;
+      }
+
+      const assignedTour = data.assignment?.tourCode
+        ? tours.find((tour) => tour.code.toLocaleLowerCase("es").includes(data.assignment!.tourCode.toLocaleLowerCase("es"))) || unassignedTour
+        : unassignedTour;
+
+      setAssignment({
+        guideFirstName: data.guide.firstName || "Guia",
+        guideLastName: data.guide.lastName || "",
+        tour: assignedTour,
+        bus: data.assignment?.bus || "Por asignar",
+        meetingTime: data.assignment?.meetingTime || "Por asignar",
+        startTime: data.assignment?.startTime || "Por asignar",
+        departurePoint: data.assignment?.departurePoint || "Por asignar",
+        dateLabel: data.assignment?.dateLabel || "Ingreso validado",
+        operationNote: data.assignment
+          ? "Al iniciar, enviar por WhatsApp a Ian la cantidad total de participantes. Finalizar el servicio en Abovedado."
+          : "Login validado contra la base de guias. Aun falta cargar la asignacion operativa de este guia en la Google Sheet.",
+      });
+    } catch {
+      setLoginError("No pudimos conectar con la base. Proba de nuevo o avisale a Ian.");
+    } finally {
+      setIsLoggingIn(false);
     }
   }
 
@@ -90,7 +141,7 @@ export default function Home() {
             <label><span>Apellido</span><input autoComplete="username" value={lastName} onChange={(event) => setLastName(event.target.value)} placeholder="Ej. Gonzalez" required /></label>
             <label><span>Ultimos 4 del DNI</span><input autoComplete="current-password" inputMode="numeric" type="password" maxLength={4} pattern="[0-9]{4}" value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))} placeholder="1234" required /></label>
             {loginError && <p className="login-error" role="alert">{loginError}</p>}
-            <button className="login-button" type="submit">Ver mi asignacion <span aria-hidden="true">-&gt;</span></button>
+            <button className="login-button" type="submit" disabled={isLoggingIn}>{isLoggingIn ? "Validando..." : "Ver mi asignacion"} <span aria-hidden="true">-&gt;</span></button>
             <aside className="demo-access"><strong>Acceso de prueba</strong><span>Apellido: DEMO - Clave: 1234</span></aside>
           </form>
         </section>
@@ -102,10 +153,10 @@ export default function Home() {
     <main className="portal-page">
       <header className="portal-topbar">
         <a className="portal-brand" href="#asignacion"><img src={logo} alt="Shorexplorations" /></a>
-        <div className="guide-account"><span><strong>{assignment.guideFirstName} {assignment.guideLastName}</strong><small>Guia asignada</small></span><button type="button" onClick={() => setAssignment(null)}>Salir</button></div>
+        <div className="guide-account"><span><strong>{assignment.guideFirstName} {assignment.guideLastName}</strong><small>Guia validado</small></span><button type="button" onClick={() => setAssignment(null)}>Salir</button></div>
       </header>
       <section className="assignment-hero" id="asignacion">
-        <div className="assignment-heading"><div><p className="eyebrow">{assignment.dateLabel}</p><h1>Buen dia,<br />{assignment.guideFirstName}.</h1></div><span className="status-pill"><i /> Servicio asignado</span></div>
+        <div className="assignment-heading"><div><p className="eyebrow">{assignment.dateLabel}</p><h1>Buen dia,<br />{assignment.guideFirstName}.</h1></div><span className="status-pill"><i /> Acceso validado</span></div>
         <article className="primary-assignment">
           <div className="assignment-main"><div className="assignment-code"><span>Codigo</span><strong>{assignment.tour.code}</strong></div><p className="eyebrow">Tu tour de hoy</p><h2>{assignment.tour.title}</h2><p>{assignment.tour.summary}</p><div className="assignment-actions"><button type="button" onClick={() => setSelected(assignment.tour)}>Ver descriptivo <span>-&gt;</span></button><a href={pdfUrl(assignment.tour.file)} target="_blank">Abrir PDF <span>v</span></a></div></div>
           <dl className="operation-grid"><div><dt>Bus asignado</dt><dd><b>{assignment.bus}</b></dd></div><div><dt>Presentacion</dt><dd>{assignment.meetingTime}</dd></div><div><dt>Salida</dt><dd>{assignment.startTime}</dd></div><div><dt>Punto de partida</dt><dd>{assignment.departurePoint}</dd></div></dl>
@@ -113,10 +164,10 @@ export default function Home() {
         </article>
       </section>
       <section className="quick-info">
-        <article><span>01</span><div><strong>Llega con anticipacion</strong><p>La presentacion obligatoria en la puerta del bus es a las {assignment.meetingTime}, 30 minutos antes del inicio del tour ({assignment.startTime}).</p></div></article>
+        <article><span>01</span><div><strong>Llega con anticipacion</strong><p>La presentacion obligatoria en la puerta del bus debe ser 30 minutos antes del inicio del tour.</p></div></article>
         <article><span>02</span><div><strong>Verifica material y audio</strong><p>Controla descriptivo, vouchers, reservas, numero identificatorio y correcto funcionamiento del microfono antes del embarque.</p></div></article>
         <article><span>03</span><div><strong>Avisa participantes reales</strong><p>Al comenzar, envia por WhatsApp a Ian la cantidad de participantes que efectivamente inicio el tour.</p></div></article>
-        <article><span>04</span><div><strong>Confirma el cierre</strong><p>Este servicio finaliza en {assignment.tour.endpoint}.</p></div></article>
+        <article><span>04</span><div><strong>Confirma el cierre</strong><p>El cierre operativo indicado para los tours regulares es Abovedado, salvo instruccion distinta.</p></div></article>
       </section>
       <section className="portal-library">
         <div className="section-heading"><div><p className="eyebrow">Biblioteca operativa</p><h2>Todos los descriptivos</h2></div><p className="result-count">{filtered.length} resultados</p></div>
