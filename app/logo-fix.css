@@ -1,0 +1,65 @@
+/* Resilient Shorexplorations brand fallback: never show a broken image icon. */
+.login-brand-panel > img,
+.portal-brand img,
+footer img {
+  display: none !important;
+}
+
+.login-brand-panel::before,
+.portal-brand::before,
+footer div::before {
+  content: "shorexplorations";
+  display: inline-flex;
+  align-items: center;
+  color: #050505;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: -0.08em;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.login-brand-panel::before {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(38px, 4.8vw, 76px);
+  max-width: min(100%, 720px);
+}
+
+.portal-brand {
+  width: auto !important;
+  min-width: 190px;
+  height: auto !important;
+}
+
+.portal-brand::before {
+  font-size: 28px;
+}
+
+footer div::before {
+  color: #fff;
+  font-size: 25px;
+}
+
+footer div span {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .login-brand-panel::before {
+    align-self: flex-start;
+    font-size: clamp(32px, 12vw, 48px);
+    max-width: calc(100vw - 36px);
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .portal-brand {
+    min-width: 150px;
+    justify-content: flex-end;
+  }
+
+  .portal-brand::before {
+    font-size: 23px;
+  }
+}
