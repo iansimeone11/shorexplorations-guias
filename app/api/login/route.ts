@@ -165,9 +165,8 @@ export async function POST(request: Request) {
   if (requestedLastName === "demo" && requestedPin === "1234") {
     return NextResponse.json({
       ok: true,
-      guide: { firstName: "Lucia", lastName: "Demo", staff: "Lucia Demo", role: "Demo", languages: "Espanol" },
+      guide: { firstName: "Pepito", lastName: "Demo", staff: "Pepito Demo", role: "Demo", languages: "Espanol" },
       assignment: { tourCode: "5400", bus: "18", meetingTime: "09:15", startTime: "09:45", departurePoint: "Pie de barco", dateLabel: "Hoy" },
-      demo: true,
     });
   }
 
