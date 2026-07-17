@@ -30,6 +30,29 @@ function clean(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function loginTokens(value: string) {
+  const ignored = new Set(["de", "del", "da", "das", "do", "dos", "la", "las", "los", "y", "e"]);
+  return value
+    .trim()
+    .split(/\s+/)
+    .map(normalizeLogin)
+    .filter((token) => token.length >= 3 && !ignored.has(token));
+}
+
+function lastNameMatches(input: string, guide: EnvGuideRecord) {
+  const requested = normalizeLogin(input);
+  if (!requested) return false;
+
+  const candidates = new Set<string>();
+  const loginLastName = normalizeLogin(guide.a || "");
+  if (loginLastName) candidates.add(loginLastName);
+
+  for (const token of loginTokens(guide.l || "")) candidates.add(token);
+  for (const token of loginTokens(guide.s || "")) candidates.add(token);
+
+  return candidates.has(requested);
+}
+
 function firstValue(record: SheetRecord, keys: string[]) {
   for (const key of keys) {
     const value = record[key];
@@ -152,7 +175,7 @@ export async function POST(request: Request) {
     if (envData) {
       const guides = JSON.parse(envData) as EnvGuideRecord[];
       const matches = guides.filter((guide) => {
-        return normalizeLogin(guide.a || "") === requestedLastName && clean(guide.p) === requestedPin;
+        return lastNameMatches(requestedLastName, guide) && clean(guide.p) === requestedPin;
       });
 
       if (matches.length !== 1) {
