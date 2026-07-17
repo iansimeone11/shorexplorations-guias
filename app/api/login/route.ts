@@ -7,6 +7,15 @@ const DEFAULT_SHEET_ID = "14uzn25YQQShwvPDwKcOSmKTJ71epYJu87k6ouOHVnxg";
 const LOGIN_RANGE = "'Login portal'!A2:Z1000";
 
 type SheetRecord = Record<string, string>;
+type EnvGuideRecord = {
+  a?: string;
+  p?: string;
+  s?: string;
+  n?: string;
+  l?: string;
+  r?: string;
+  i?: string;
+};
 
 function normalizeLogin(value: string) {
   return value
@@ -139,6 +148,34 @@ export async function POST(request: Request) {
   }
 
   try {
+    const envData = process.env.GUIDES_LOGIN_DATA;
+    if (envData) {
+      const guides = JSON.parse(envData) as EnvGuideRecord[];
+      const matches = guides.filter((guide) => {
+        return normalizeLogin(guide.a || "") === requestedLastName && clean(guide.p) === requestedPin;
+      });
+
+      if (matches.length !== 1) {
+        return NextResponse.json(
+          { ok: false, error: matches.length > 1 ? "Hay mas de un registro con ese acceso. Avisale a Ian para revisarlo." : "Apellido o clave incorrectos." },
+          { status: 401 },
+        );
+      }
+
+      const guide = matches[0];
+      return NextResponse.json({
+        ok: true,
+        guide: {
+          firstName: clean(guide.n) || splitStaff(clean(guide.s), clean(guide.l)).firstName,
+          lastName: clean(guide.l) || clean(guide.a),
+          staff: clean(guide.s),
+          role: clean(guide.r),
+          languages: clean(guide.i),
+        },
+        assignment: null,
+      });
+    }
+
     const rows = await readLoginRows();
     const matches = rows.filter((record) => {
       const active = normalizeLogin(firstValue(record, ["activo"]));
@@ -183,7 +220,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { ok: false, error: "La base de guias todavia no esta conectada en Vercel. Revisa variables privadas de Google." },
+      { ok: false, error: "La base de guias todavia no esta conectada en Vercel. Revisa variables privadas." },
       { status: 503 },
     );
   }
