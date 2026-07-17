@@ -8,7 +8,7 @@ type LoginResponse =
   | { ok: true; guide: { firstName: string; lastName: string; staff: string; role: string; languages: string }; assignment: null | { tourCode: string; bus: string; meetingTime: string; startTime: string; departurePoint: string; dateLabel: string }; demo?: boolean }
   | { ok: false; error: string };
 
-const pdfBase = "https://shorexplorations-guias.freedomlion.chatgpt.site/pdfs";
+const pdfBase = "/api/pdf";
 const logo = "/logo.svg";
 
 const tours: Tour[] = [
@@ -54,7 +54,7 @@ const demoAssignment: Assignment = {
 };
 
 const categories = ["Todos", "Ciudad", "Tango", "Naturaleza", "Futbol", "Traslado"];
-const pdfUrl = (file: string) => `${pdfBase}/${encodeURIComponent(file)}`;
+const pdfUrl = (file: string) => `${pdfBase}?file=${encodeURIComponent(file)}`;
 
 export default function Home() {
   const [assignment, setAssignment] = useState<Assignment | null>(null);
