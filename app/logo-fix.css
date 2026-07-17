@@ -1,65 +1,57 @@
-/* Resilient Shorexplorations brand fallback: never show a broken image icon. */
-.login-brand-panel > img,
-.portal-brand img,
-footer img {
-  display: none !important;
-}
-
+/* Shorexplorations logo placement. The real asset is now available at /logo.svg, so do not replace it with text. */
 .login-brand-panel::before,
 .portal-brand::before,
 footer div::before {
-  content: "shorexplorations";
-  display: inline-flex;
-  align-items: center;
-  color: #050505;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: 500;
-  letter-spacing: -0.08em;
-  line-height: 0.9;
-  white-space: nowrap;
+  content: none !important;
 }
 
-.login-brand-panel::before {
+.login-brand-panel > img {
+  display: block !important;
+  align-self: flex-end;
+  width: clamp(210px, 18vw, 300px);
+  height: auto;
+  max-height: 230px;
+  object-fit: contain;
+  object-position: center;
   position: relative;
-  z-index: 2;
-  font-size: clamp(38px, 4.8vw, 76px);
-  max-width: min(100%, 720px);
+  z-index: 3;
 }
 
-.portal-brand {
-  width: auto !important;
-  min-width: 190px;
-  height: auto !important;
+.portal-brand img {
+  display: block !important;
+  width: 118px;
+  height: auto;
+  max-height: 78px;
+  object-fit: contain;
 }
 
-.portal-brand::before {
-  font-size: 28px;
-}
-
-footer div::before {
-  color: #fff;
-  font-size: 25px;
+footer img {
+  display: block !important;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: none;
 }
 
 footer div span {
-  display: none;
+  display: inline;
 }
 
 @media (max-width: 700px) {
-  .login-brand-panel::before {
-    align-self: flex-start;
-    font-size: clamp(32px, 12vw, 48px);
-    max-width: calc(100vw - 36px);
-    overflow: hidden;
-    text-overflow: clip;
+  .login-brand-panel > img {
+    align-self: flex-end;
+    width: min(46vw, 190px);
+    max-height: 150px;
+    margin-bottom: 12px;
   }
 
   .portal-brand {
-    min-width: 150px;
+    min-width: 118px;
     justify-content: flex-end;
   }
 
-  .portal-brand::before {
-    font-size: 23px;
+  .portal-brand img {
+    width: 112px;
+    max-height: 72px;
   }
 }
