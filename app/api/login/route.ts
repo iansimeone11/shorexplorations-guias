@@ -42,6 +42,7 @@ function loginTokens(value: string) {
 function lastNameMatches(input: string, guide: EnvGuideRecord) {
   const requested = normalizeLogin(input);
   if (!requested) return false;
+  const requestedTokens = loginTokens(input);
 
   const candidates = new Set<string>();
   const loginLastName = normalizeLogin(guide.a || "");
@@ -50,7 +51,7 @@ function lastNameMatches(input: string, guide: EnvGuideRecord) {
   for (const token of loginTokens(guide.l || "")) candidates.add(token);
   for (const token of loginTokens(guide.s || "")) candidates.add(token);
 
-  return candidates.has(requested);
+  return candidates.has(requested) || requestedTokens.some((token) => candidates.has(token));
 }
 
 function firstValue(record: SheetRecord, keys: string[]) {
